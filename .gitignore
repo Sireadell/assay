@@ -6,3 +6,5 @@ node_modules
 /public/share.js
 /public/stamp.js
 /public/labels.js
+
+.vercel
