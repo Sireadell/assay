@@ -1,2 +1,8 @@
 node_modules
 .env
+.vercel
+/public/verdict.js
+/public/naira.js
+/public/share.js
+/public/stamp.js
+/public/labels.js

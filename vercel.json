@@ -1,0 +1,8 @@
+{
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "node scripts/copy-shared.mjs",
+  "outputDirectory": "public",
+  "rewrites": [{ "source": "/p/:hash", "destination": "/api/proof?hash=:hash" }],
+  "headers": [{ "source": "/(.*)", "headers": [{ "key": "x-content-type-options", "value": "nosniff" }] }]
+}
