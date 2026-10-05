@@ -1,0 +1,23 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "TruePaidStamp.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/// @title TruePaidStamp\n/// @notice A public notice board. Anyone can pin one line saying what TruePaid\n/// found for a payment: this transaction, to this seller, got this verdict.\n/// No owner, no upgrade, no fees, nothing can be edited or deleted by anyone\n/// except the same stamper re-stamping their own line.\n///\n/// Verdict codes: 1 PAID, 2 NOT_PAID, 3 FAKE_TOKEN, 4 PARTIAL, 5 OVERPAID.\n///\n/// Anyone can stamp, so read the `stamper` too. A stamp only says what that\n/// address claimed, it does not prove the claim. The checker page recomputes\n/// the verdict from the chain every time.\ncontract TruePaidStamp {\n    struct Stamp {\n        uint8 verdict;\n        uint64 time;\n    }\n\n    event Stamped(bytes32 indexed txHash, address indexed seller, address indexed stamper, uint8 verdict);\n\n    // txHash => seller => stamper => stamp\n    mapping(bytes32 => mapping(address => mapping(address => Stamp))) public stamps;\n\n    function stamp(bytes32 txHash, address seller, uint8 verdict) external {\n        require(verdict >= 1 && verdict <= 5, \"bad verdict\");\n        stamps[txHash][seller][msg.sender] = Stamp(verdict, uint64(block.timestamp));\n        emit Stamped(txHash, seller, msg.sender, verdict);\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode.object"
+        ]
+      }
+    }
+  }
+}

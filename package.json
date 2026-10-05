@@ -1,0 +1,15 @@
+{
+  "name": "truepaid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Paste an Arc transaction hash and get one verdict: were you really paid in real USDC, or in a fake token with the same name.",
+  "scripts": {
+    "test": "node --test",
+    "check": "node src/cli.js"
+  },
+  "devDependencies": {
+    "ethers": "^6.17.0",
+    "solc": "^0.8.26"
+  }
+}

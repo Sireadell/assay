@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TruePaid</title>
+<meta name="description" content="Paste an Arc payment and see if you got real USDC or a fake token with the same name.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <p class="brand">TruePaid</p>
+
+  <section class="banner" id="req" hidden>
+    <p style="margin:0 0 6px">You've been asked to pay</p>
+    <b id="reqAmt"></b>
+    <p class="meta" id="reqNote"></p>
+    <p class="meta" style="margin-top:10px">Send real USDC on Arc to this address:</p>
+    <p style="margin:4px 0"><code id="reqTo"></code></p>
+    <button class="ghost" id="copyTo" type="button">Copy address</button>
+    <p class="meta">After you pay, paste your transaction below and press Check. Then send the proof link back to the seller.</p>
+  </section>
+
+  <div id="intro">
+    <h1>Did you really get paid in USDC?</h1>
+    <p class="lead">A buyer sends you a payment on Arc and the explorer says "Transfer 20 USDC". It can be a fake token that only copies the name. Paste the payment here and get one clear answer.</p>
+  </div>
+
+  <form id="f">
+    <label for="hash">Transaction hash, or the explorer link for it</label>
+    <input id="hash" required placeholder="0x... or https://explorer.arc.io/tx/0x..." autocomplete="off" spellcheck="false">
+    <p class="hint" id="hashHint"></p>
+    <label for="seller" id="sellerLabel">Your Arc address (where the money should arrive)</label>
+    <input id="seller" required placeholder="0x..." autocomplete="off" spellcheck="false">
+    <div class="row">
+      <div>
+        <label for="naira">Price in naira (optional)</label>
+        <input id="naira" inputmode="decimal" placeholder="30000" autocomplete="off">
+      </div>
+      <div>
+        <label for="rate">Naira for 1 USDC</label>
+        <input id="rate" inputmode="decimal" placeholder="1500" autocomplete="off">
+      </div>
+    </div>
+    <p class="hint" id="conv"></p>
+    <label for="expected">Amount expected in USDC (optional)</label>
+    <input id="expected" inputmode="decimal" placeholder="20" autocomplete="off">
+    <button id="b" type="submit">Check this payment</button>
+  </form>
+
+  <section class="card" id="out" role="status" aria-live="polite" hidden>
+    <p class="verdict" id="v"></p>
+    <p class="why" id="r"></p>
+    <p class="meta" id="x"></p>
+    <p class="share" id="s"></p>
+    <a class="btn wa" id="wa" target="_blank" rel="noopener" hidden>Share on WhatsApp</a>
+    <button id="stampBtn" type="button" hidden>Stamp this verdict on Arc</button>
+    <p class="meta" id="stampMsg"></p>
+  </section>
+
+  <div id="maker">
+    <hr>
+    <h2>Selling something? Send your buyer a payment link</h2>
+    <p class="meta" style="margin-top:0">The link shows your buyer the amount and your address. After they pay, they get a proof link to send you. Nothing is saved anywhere, everything is inside the link.</p>
+    <label for="mSeller">Your Arc address</label>
+    <input id="mSeller" placeholder="0x..." autocomplete="off" spellcheck="false">
+    <div class="row">
+      <div>
+        <label for="mAmt">Amount in USDC</label>
+        <input id="mAmt" inputmode="decimal" placeholder="20" autocomplete="off">
+      </div>
+      <div>
+        <label for="mNote">What it's for (optional)</label>
+        <input id="mNote" maxlength="80" placeholder="2 bags of rice" autocomplete="off">
+      </div>
+    </div>
+    <p class="hint" id="mConv"></p>
+    <button class="ghost" id="mMake" type="button">Make payment link</button>
+    <p class="share" id="mOut"></p>
+    <a class="btn wa" id="mWa" target="_blank" rel="noopener" hidden>Send link on WhatsApp</a>
+  </div>
+
+  <small>TruePaid only counts the real USDC contract on Arc mainnet (<code>0x3600000000000000000000000000000000000000</code>). A token that only copies the name USDC does not count. It cannot tell you whether the goods arrived. It reads the public chain and never asks for your keys.</small>
+</main>
+<script type="module">
+import { LABEL, FAKE_EXPLAINER } from '/labels.js';
+import { nairaToUsdc } from '/naira.js';
+import { STAMP_CODE, ARC_CHAIN, EXPLORER, stampTx } from '/stamp.js';
+import { extractHash, proofUrl, whatsappUrl, requestUrl } from '/share.js';
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try { return localStorage.getItem(k) || ''; } catch { return ''; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} },
+};
+const ADDR = /^0x[0-9a-fA-F]{40}$/;
+const params = new URLSearchParams(location.search);
+const isRequest = params.get('request') === '1' && ADDR.test(params.get('seller') || '');
+
+$('hash').value = params.get('hash') || '';
+$('seller').value = params.get('seller') || store.get('seller');
+$('expected').value = params.get('expected') || '';
+$('naira').value = params.get('naira') || '';
+$('rate').value = store.get('rate');
+$('mSeller').value = store.get('seller');
+
+// Payment request mode: a buyer opened a link a seller sent them.
+if (isRequest) {
+  $('req').hidden = false; $('intro').hidden = true; $('maker').hidden = true;
+  const amt = params.get('expected');
+  $('reqAmt').textContent = amt ? amt + ' USDC' : 'in USDC';
+  $('reqNote').textContent = params.get('note') ? 'For: ' + params.get('note') : '';
+  $('reqTo').textContent = params.get('seller');
+  $('seller').readOnly = true; $('expected').readOnly = true;
+  $('sellerLabel').textContent = 'Seller address (from the link)';
+  $('copyTo').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(params.get('seller')); $('copyTo').textContent = 'Copied'; }
+    catch { $('copyTo').textContent = 'Select the address above and copy it'; }
+  });
+}
+
+// Accept a pasted explorer link and keep only the hash.
+function cleanHash(){
+  const raw = $('hash').value.trim();
+  const h = extractHash(raw);
+  if (h && h !== raw) { $('hash').value = h; $('hashHint').textContent = 'Found the transaction in that link.'; }
+  else if (!h) $('hashHint').textContent = '';
+  return h || raw;
+}
+$('hash').addEventListener('change', cleanHash);
+$('hash').addEventListener('paste', () => setTimeout(cleanHash, 0));
+
+function convert(){
+  const usdc = nairaToUsdc($('naira').value, $('rate').value);
+  const conv = $('conv');
+  if (!$('naira').value.trim()) { conv.textContent = ''; return null; }
+  if (!$('rate').value.trim()) { conv.textContent = 'Type today\'s rate to see the USDC amount.'; return null; }
+  if (!usdc) { conv.textContent = 'Use plain numbers, like 30000 and 1500.'; return null; }
+  conv.textContent = `${$('naira').value.trim()} naira is about ${usdc} USDC at ${$('rate').value.trim()} naira per USDC.`;
+  return usdc;
+}
+$('naira').addEventListener('input', convert);
+$('rate').addEventListener('input', () => { store.set('rate', $('rate').value.trim()); convert(); });
+convert();
+
+let last = null;
+function showStamp(){
+  $('stampMsg').textContent = '';
+  const ok = last && STAMP_CODE[last.verdict] && window.ethereum;
+  $('stampBtn').hidden = !ok;
+  if (last && STAMP_CODE[last.verdict] && !window.ethereum) {
+    $('stampMsg').textContent = 'To stamp this verdict on Arc, open this page in a browser with a wallet such as MetaMask.';
+  }
+}
+$('stampBtn').addEventListener('click', async () => {
+  const msg = $('stampMsg'), btn = $('stampBtn');
+  btn.disabled = true; msg.textContent = 'Check your wallet to approve the stamp. It costs about 0.001 USDC.';
+  try {
+    const eth = window.ethereum;
+    try { await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ARC_CHAIN.chainId }] }); }
+    catch (err) { if (err && err.code === 4902) await eth.request({ method: 'wallet_addEthereumChain', params: [ARC_CHAIN] }); else throw err; }
+    const [from] = await eth.request({ method: 'eth_requestAccounts' });
+    const txHash = await eth.request({ method: 'eth_sendTransaction', params: [stampTx(from, last.hash, last.seller, last.verdict)] });
+    msg.textContent = '';
+    const a = document.createElement('a'); a.href = EXPLORER + '/tx/' + txHash; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'See the stamp on Arc';
+    msg.append('Stamped. ', a);
+    btn.hidden = true;
+  } catch (err) {
+    msg.textContent = err && err.code === 4001 ? 'You cancelled. Nothing was stamped.' : 'Could not stamp: ' + ((err && err.message) || 'unknown error').slice(0, 140);
+  }
+  btn.disabled = false;
+});
+
+$('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('b').disabled = true; $('b').textContent = 'Checking...';
+  const hash = cleanHash(), seller = $('seller').value.trim();
+  if (!isRequest) store.set('seller', seller);
+  const expected = $('expected').value.trim() || convert() || '';
+  const q = new URLSearchParams({ hash, seller });
+  if (expected) q.set('expected', expected);
+  const out = $('out');
+  $('x').textContent = ''; $('s').textContent = ''; $('wa').hidden = true;
+  try {
+    const d = await (await fetch('/api/check?' + q)).json();
+    out.hidden = false;
+    last = { hash, seller, verdict: d.verdict };
+    showStamp();
+    const label = LABEL[d.verdict] || d.verdict;
+    $('v').className = 'verdict ' + d.verdict;
+    $('v').textContent = label;
+    $('r').textContent = d.reason;
+    if (d.fakeToken) {
+      const a = document.createElement('a');
+      a.href = EXPLORER + '/token/' + d.fakeToken; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'See the fake token on the explorer';
+      $('x').append(FAKE_EXPLAINER + ' ', a, '.');
+    }
+    if (/^0x[0-9a-fA-F]{64}$/.test(hash)) {
+      const link = proofUrl(location.origin, hash, seller, expected);
+      const a = document.createElement('a'); a.href = link; a.textContent = link;
+      $('s').append(isRequest ? 'Proof link to send to the seller: ' : 'Proof link to send to the buyer: ', a);
+      $('wa').href = whatsappUrl(`TruePaid check: ${label}. ${d.reason} ${link}`);
+      $('wa').hidden = false;
+    }
+  } catch {
+    out.hidden = false; last = null; showStamp();
+    $('v').className = 'verdict UNVERIFIED'; $('v').textContent = 'CANNOT VERIFY';
+    $('r').textContent = 'Could not reach the checker. Try again.';
+  }
+  $('b').disabled = false; $('b').textContent = 'Check this payment';
+});
+
+// Seller side: make a payment link for a buyer.
+function makerConvert(){
+  const usdc = nairaToUsdc($('naira').value, $('rate').value);
+  $('mConv').textContent = usdc && !$('mAmt').value.trim() ? `Tip: your naira price above is about ${usdc} USDC.` : '';
+}
+$('naira').addEventListener('input', makerConvert);
+$('mMake').addEventListener('click', () => {
+  const seller = $('mSeller').value.trim(), amount = $('mAmt').value.trim();
+  $('mOut').textContent = ''; $('mWa').hidden = true;
+  if (!ADDR.test(seller)) { $('mOut').textContent = 'Type your Arc address first. It starts with 0x and is 42 characters long.'; return; }
+  if (amount && !/^\d+(\.\d{1,6})?$/.test(amount)) { $('mOut').textContent = 'Type the amount as a plain number, like 20 or 12.5.'; return; }
+  store.set('seller', seller);
+  const link = requestUrl(location.origin, { seller, amount, note: $('mNote').value.trim() });
+  const a = document.createElement('a'); a.href = link; a.textContent = link;
+  $('mOut').append('Your payment link: ', a);
+  const what = $('mNote').value.trim() ? ' for ' + $('mNote').value.trim() : '';
+  $('mWa').href = whatsappUrl(`Please pay ${amount ? amount + ' USDC' : 'in USDC'}${what} on Arc here: ${link}`);
+  $('mWa').hidden = false;
+});
+</script>
+</body>
+</html>

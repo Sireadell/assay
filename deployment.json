@@ -1,0 +1,9 @@
+{
+  "address": "0x208F3477d9073085C455bDa460F4cBd65dA7C20c",
+  "deployTx": "0xda0d1bed5371435e56456733b086b9da735c2d8e7c760dbb47bf431647d26f5c",
+  "block": 24380049,
+  "deployer": "0xb3FB14FEcac09efbD0C74Fc07d50d7eD1eef2B53",
+  "gasUsed": "196109",
+  "costUsdc": 0.004902725,
+  "chainId": 5042
+}
