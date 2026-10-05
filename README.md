@@ -2,6 +2,8 @@
 
 Did you really get paid in USDC on Arc, or in a fake token with the same name?
 
+**Live: https://truepaid.vercel.app**
+
 Paste a transaction hash and your Arc address. TruePaid gives one answer: **PAID**, **PARTLY PAID**, **NOT PAID**, or **NOT PAID: FAKE TOKEN**.
 
 ## Why this exists
@@ -77,14 +79,15 @@ node src/cli.js <hash> <seller>
 | File | Purpose |
 |---|---|
 | `src/verdict.js` | The verdict engine. Pure functions, no network. |
-| `src/arcRpc.js` | Reads a transaction from Arc mainnet. |
+| `src/arcRpc.js` | Reads a transaction from Arc mainnet. Asks four Arc mainnet endpoints at once and takes the first real answer. |
+| `src/handlers.js`, `api/` | Request logic, shared by the local server and the Vercel functions. |
 | `src/server.js` | Serves the page, `/api/check` and the proof link. |
 | `src/share.js` | Proof, WhatsApp and payment request links. |
 | `src/naira.js` | Naira to USDC with a rate the user types. |
 | `src/stamp.js` | Builds the stamp transaction for the visitor's wallet. |
 | `contracts/TruePaidStamp.sol` | The stamp contract. |
 | `scripts/` | Compile, deploy and a live stamp check. |
-| `test/` | 28 tests, including two real Arc mainnet transactions saved as fixtures. |
+| `test/` | 33 tests, including two real Arc mainnet transactions saved as fixtures. |
 
 ## License
 
