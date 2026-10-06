@@ -1,4 +1,4 @@
-// On an Arc explorer transaction page, shows a Assay badge: did the saved
+// On an Arc explorer transaction page, shows an Assay badge: did the saved
 // address really receive real USDC in this transaction?
 // The explorer is a single-page app, so the address bar changes without a page
 // load. Watch it and re-check when the transaction changes.
