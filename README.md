@@ -30,6 +30,22 @@ TruePaid reads the same transaction and says: NOT PAID: FAKE TOKEN.
 | Pasted explorer links | Paste `https://explorer.arc.io/tx/0x...` and TruePaid pulls the hash out. |
 | Why a fake is fake | The fake-token verdict links to the fake token on the explorer and says where real USDC lives. |
 
+## Chrome extension
+
+The scam happens on the explorer page, so the extension puts the answer there. Open any payment on explorer.arc.io and a badge says whether real USDC reached your address.
+
+![The explorer says "Transfer 20 USDC". The TruePaid badge says NOT PAID: FAKE TOKEN.](docs/extension-fake-token.jpg)
+
+| Step | What to do |
+|---|---|
+| 1 | Download [`docs/truepaid-extension.zip`](docs/truepaid-extension.zip) and unzip it, or use the `extension/` folder from this repo |
+| 2 | Open `chrome://extensions` and switch on **Developer mode** (top right) |
+| 3 | Click **Load unpacked** and pick the unzipped folder |
+| 4 | Click the TruePaid icon in the toolbar, paste your Arc address, press Save |
+| 5 | Open a payment on https://explorer.arc.io. The badge appears top right |
+
+It works on desktop Chrome, Edge and Brave. Phone browsers do not run extensions, so on a phone use the website. The extension only reads explorer.arc.io pages and only talks to truepaid.vercel.app. Your address is kept in your browser's own extension storage.
+
 ## The stamp on Arc
 
 After a check you can press "Stamp this verdict on Arc". Your wallet sends one small transaction (about 0.001 USDC) to the TruePaidStamp contract. It pins one line on the chain: this transaction, to this seller, got this verdict.
