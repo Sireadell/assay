@@ -29,11 +29,15 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(label)} - Assay</title>
 <meta name="description" content="${esc(label)}: ${esc(result.reason)}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0e1c15">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<header class="hero slim"><div class="wrap"><p class="top"><a class="brand" href="/"><i class="mark"></i>Assay</a></p></div></header>
 <main>
-  <p class="brand"><a href="/">Assay</a></p>
   <section class="card vcard tone-${TONE[result.verdict] || 'warn'}" role="status">
     <p class="verdict">${esc(word)}</p>
     ${sub ? `<p class="sub">${esc(sub)}</p>` : ''}
@@ -59,8 +63,12 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
 export function proofError(message) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Assay</title><link rel="stylesheet" href="/style.css"></head>
-<body><main><p class="brand"><a href="/">Assay</a></p>
+<title>Assay</title><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0e1c15">
+<link rel="stylesheet" href="/style.css"></head>
+<body><header class="hero slim"><div class="wrap"><p class="top"><a class="brand" href="/"><i class="mark"></i>Assay</a></p></div></header><main>
 <section class="card vcard tone-warn"><p class="verdict">CANNOT VERIFY</p><p class="why">${esc(message)}</p></section>
 <p><a class="btn" href="/">Check a payment</a></p></main></body></html>`;
 }

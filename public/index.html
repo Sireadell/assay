@@ -5,11 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Assay</title>
 <meta name="description" content="Paste an Arc payment and see if you got real USDC or a fake token with the same name.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0e1c15">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<main>
-  <p class="brand">Assay</p>
+<header class="hero">
+<div class="wrap">
+  <p class="top"><span class="brand"><i class="mark"></i>Assay</span><a class="toplink" href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Chrome extension</a></p>
 
   <section class="banner" id="req" hidden>
     <p style="margin:0 0 6px">You've been asked to pay</p>
@@ -22,18 +27,36 @@
   </section>
 
   <div id="intro">
-    <h1>Did you really get paid in USDC?</h1>
-    <p class="lead">A buyer sends you a payment on Arc and the explorer says "Transfer 20 USDC". It can be a fake token that only copies the name. Type your address and Assay shows what really reached you.</p>
+    <h1>Did you <span class="hl">really</span> get paid?</h1>
+    <p class="lead">A buyer sends USDC on Arc and the explorer says "Transfer 20 USDC". It can be a fake token with the same name. Assay shows what truly reached you.</p>
   </div>
 
   <section id="inbox">
-    <label for="iAddr" style="margin-top:0">Your Arc address</label>
-    <input id="iAddr" placeholder="0x..." autocomplete="off" spellcheck="false">
-    <button id="iBtn" type="button">Check my payments</button>
+    <div class="find">
+      <label class="sr" for="iAddr">Your Arc address</label>
+      <input id="iAddr" placeholder="Paste your Arc address (0x...)" autocomplete="off" spellcheck="false">
+      <button id="iBtn" type="button">Check</button>
+    </div>
     <p class="hint" id="iMsg" role="status" aria-live="polite"></p>
-    <div class="chips" id="iChips"></div>
-    <ul class="inbox" id="iList"></ul>
-    <button class="ghost" id="iMore" type="button" hidden>Scan older payments</button>
+    <button class="try" id="tryBtn" type="button">See a fake payment caught</button>
+  </section>
+</div>
+</header>
+<main>
+  <div class="chips" id="iChips"></div>
+  <ul class="inbox" id="iList"></ul>
+  <button class="more" id="iMore" type="button" hidden>Scan older payments</button>
+
+  <section class="card vcard" id="out" role="status" aria-live="polite" hidden>
+    <p class="verdict" id="v"></p>
+    <p class="sub" id="sub"></p>
+    <p class="why" id="r"></p>
+    <div class="facts2" id="facts"></div>
+    <p class="meta" id="x"></p>
+    <p class="share" id="s"></p>
+    <a class="btn" id="wa" target="_blank" rel="noopener" hidden>Send proof to the buyer</a>
+    <button id="stampBtn" class="ghost" type="button" hidden>Stamp this verdict on Arc</button>
+    <p class="meta" id="stampMsg"></p>
   </section>
 
   <details id="one">
@@ -61,17 +84,6 @@
   </form>
   </details>
 
-  <section class="card vcard" id="out" role="status" aria-live="polite" hidden>
-    <p class="verdict" id="v"></p>
-    <p class="sub" id="sub"></p>
-    <p class="why" id="r"></p>
-    <div class="facts2" id="facts"></div>
-    <p class="meta" id="x"></p>
-    <p class="share" id="s"></p>
-    <a class="btn" id="wa" target="_blank" rel="noopener" hidden>Send proof to the buyer</a>
-    <button id="stampBtn" class="ghost" type="button" hidden>Stamp this verdict on Arc</button>
-    <p class="meta" id="stampMsg"></p>
-  </section>
 
   <div id="maker">
     <hr>
@@ -160,6 +172,14 @@ $('rate').addEventListener('input', () => { store.set('rate', $('rate').value.tr
 convert();
 
 let last = null;
+let demo = false;
+// A known fake payment, so anyone can see what a caught fake looks like.
+const EXAMPLE = { hash: '0x4a36399e8e34ebdcba92cee84ff0a1dc574ee03086d99ca14197ba2adcbfab85', seller: '0xad3cd9a7995c2895ce41f9c0220deb344173ba4b', expected: '20' };
+$('tryBtn').addEventListener('click', () => {
+  $('hash').value = EXAMPLE.hash; $('seller').value = EXAMPLE.seller; $('expected').value = EXAMPLE.expected;
+  $('one').open = true; demo = true;
+  $('f').requestSubmit();
+});
 function showStamp(){
   $('stampMsg').textContent = '';
   const ok = last && STAMP_CODE[last.verdict] && window.ethereum;
@@ -191,7 +211,8 @@ $('f').addEventListener('submit', async e => {
   e.preventDefault();
   $('b').disabled = true; $('b').textContent = 'Checking...';
   const hash = cleanHash(), seller = $('seller').value.trim();
-  if (!isRequest) store.set('seller', seller);
+  if (!isRequest && !demo) store.set('seller', seller);
+  demo = false;
   const expected = $('expected').value.trim() || convert() || '';
   const q = new URLSearchParams({ hash, seller });
   if (expected) q.set('expected', expected);
