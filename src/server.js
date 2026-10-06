@@ -40,4 +40,4 @@ createServer(async (req, res) => {
   const file = STATIC[url.pathname];
   if (file) return send(res, 200, await readFile(new URL(file[0], import.meta.url), 'utf8'), file[1]);
   send(res, 404, { error: 'not found' });
-}).listen(PORT, () => console.log(`TruePaid listening on :${PORT}`));
+}).listen(PORT, () => console.log(`Assay listening on :${PORT}`));

@@ -1,22 +1,24 @@
-# TruePaid
+# Assay
 
 Did you really get paid in USDC on Arc, or in a fake token with the same name?
 
-**Live: https://truepaid.vercel.app**
+An assay is the test that tells real gold from fake. Assay does the same for USDC payments on Arc.
 
-Paste a transaction hash and your Arc address. TruePaid gives one answer: **PAID**, **PARTLY PAID**, **NOT PAID**, or **NOT PAID: FAKE TOKEN**.
+**Live: https://assay-arc.vercel.app**
+
+Paste a transaction hash and your Arc address. Assay gives one answer: **PAID**, **PARTLY PAID**, **NOT PAID**, or **NOT PAID: FAKE TOKEN**.
 
 ## Why this exists
 
 Arc's block explorer shows a lookalike token transfer as "Transfer 20 USDC". Look at transaction `0x4a36399e8e34ebdcba92cee84ff0a1dc574ee03086d99ca14197ba2adcbfab85`. The seller `0xad3cd9a7995c2895ce41f9c0220deb344173ba4b` received 20 of a token that only copies the name. It is not real USDC. Someone new to digital currency would call that payment complete and hand over the goods.
 
-TruePaid reads the same transaction and says: NOT PAID: FAKE TOKEN.
+Assay reads the same transaction and says: NOT PAID: FAKE TOKEN.
 
 ## What it checks
 
 | Check | How |
 |---|---|
-| Real USDC, not a lookalike | Only the real USDC contract on Arc mainnet counts (`0x3600000000000000000000000000000000000000`). A real USDC move also writes a second log from the system address `0xfffffffffffffffffffffffffffffffffffffffe`, and plain sends write only that one. TruePaid counts both without double counting. |
+| Real USDC, not a lookalike | Only the real USDC contract on Arc mainnet counts (`0x3600000000000000000000000000000000000000`). A real USDC move also writes a second log from the system address `0xfffffffffffffffffffffffffffffffffffffffe`, and plain sends write only that one. Assay counts both without double counting. |
 | Right recipient | Only transfers to the address you typed count. |
 | Right amount | Optional. Type the USDC amount, or a naira price and today's rate, and it says PAID, PARTLY PAID or OVERPAID. |
 | Confirmed | A failed or missing transaction is not PAID. |
@@ -27,24 +29,24 @@ TruePaid reads the same transaction and says: NOT PAID: FAKE TOKEN.
 | Proof link | `/p/<hash>?seller=<address>` shows the verdict to anyone. It re-reads the chain every time it is opened. Nothing is stored on a server. |
 | WhatsApp share | One tap sends the verdict and the proof link. |
 | Payment link for sellers | A seller makes a link with their address, the amount and what it's for. The buyer opens it, pays, pastes the hash and gets a proof link to send back. Everything lives inside the link. |
-| Pasted explorer links | Paste `https://explorer.arc.io/tx/0x...` and TruePaid pulls the hash out. |
-| Why a fake is fake | TruePaid reads the name each token gives itself. "FAKE TOKEN" is only said when a token copies the USDC name (the example calls itself "USDC"). Any other token is "NOT PAID", with its own name. The verdict links to the token on the explorer. |
+| Pasted explorer links | Paste `https://explorer.arc.io/tx/0x...` and Assay pulls the hash out. |
+| Why a fake is fake | Assay reads the name each token gives itself. "FAKE TOKEN" is only said when a token copies the USDC name (the example calls itself "USDC"). Any other token is "NOT PAID", with its own name. The verdict links to the token on the explorer. |
 
 ## Chrome extension
 
 The scam happens on the explorer page, so the extension puts the answer there. Open any payment on explorer.arc.io and a badge says whether real USDC reached your address.
 
-![The explorer says "Transfer 20 USDC". The TruePaid badge says NOT PAID: FAKE TOKEN.](docs/extension-fake-token.jpg)
+![The explorer says "Transfer 20 USDC". The Assay badge says NOT PAID: FAKE TOKEN.](docs/extension-fake-token.jpg)
 
 | Step | What to do |
 |---|---|
-| 1 | Download [`docs/truepaid-extension.zip`](docs/truepaid-extension.zip) and unzip it, or use the `extension/` folder from this repo |
+| 1 | Download [`docs/assay-extension.zip`](docs/assay-extension.zip) and unzip it, or use the `extension/` folder from this repo |
 | 2 | Open `chrome://extensions` and switch on **Developer mode** (top right) |
 | 3 | Click **Load unpacked** and pick the unzipped folder |
-| 4 | Click the TruePaid icon in the toolbar, paste your Arc address, press Save |
+| 4 | Click the Assay icon in the toolbar, paste your Arc address, press Save |
 | 5 | Open a payment on https://explorer.arc.io. The badge appears top right |
 
-It works on desktop Chrome, Edge and Brave. Phone browsers do not run extensions, so on a phone use the website. The extension only reads explorer.arc.io pages and only talks to truepaid.vercel.app. Your address is kept in your browser's own extension storage.
+It works on desktop Chrome, Edge and Brave. Phone browsers do not run extensions, so on a phone use the website. The extension only reads explorer.arc.io pages and only talks to assay-arc.vercel.app. Your address is kept in your browser's own extension storage.
 
 ## The stamp on Arc
 
@@ -58,7 +60,7 @@ After a check you can press "Stamp this verdict on Arc". Your wallet sends one s
 | Owner, upgrades, fees | None |
 | Deploy tx | `0xda0d1bed5371435e56456733b086b9da735c2d8e7c760dbb47bf431647d26f5c` |
 
-Anyone can stamp, so a stamp records who made the claim, not that the claim is true. The checker page recomputes the verdict from the chain every time.
+The contract keeps the project's first name, TruePaidStamp. Anyone can stamp, so a stamp records who made the claim, not that the claim is true. The checker page recomputes the verdict from the chain every time.
 
 ## Why Arc
 
@@ -78,10 +80,10 @@ Anyone can stamp, so a stamp records who made the claim, not that the claim is t
 
 ## Related tools
 
-| Tool | What it does | What TruePaid does differently |
+| Tool | What it does | What Assay does differently |
 |---|---|---|
-| [Arc explorer](https://explorer.arc.io) | Shows every Arc transaction and headlines most with a summary like "Transfer 20 USDC", using the token's own name. | TruePaid checks the token contract against real USDC and gives one verdict for a named seller. The explorer calls the fake-token example above a 20 USDC transfer. |
-| [Payproof](https://github.com/Kriptoboss/payproof) | Invoicing on Arc: make an invoice link, get paid, give the client a receipt anyone can check. Its "Verify a payment" mode rebuilds a receipt from a transaction hash. From its source (checked 2026-10-05): it only accepts the real USDC and EURC contracts, so a fake token gets "no transfer found"; it reads the first transfer only; it does not check who received the money; it does not see plain USDC sends (the ones that only write the system log); and it runs on Arc Testnet. | TruePaid names the fake and says NOT PAID: FAKE TOKEN, checks the money reached the right seller, counts plain USDC sends, and runs on mainnet. TruePaid's payment link borrows Payproof's good idea of keeping everything inside the link. |
+| [Arc explorer](https://explorer.arc.io) | Shows every Arc transaction and headlines most with a summary like "Transfer 20 USDC", using the token's own name. | Assay checks the token contract against real USDC and gives one verdict for a named seller. The explorer calls the fake-token example above a 20 USDC transfer. |
+| [Payproof](https://github.com/Kriptoboss/payproof) | Invoicing on Arc: make an invoice link, get paid, give the client a receipt anyone can check. Its "Verify a payment" mode rebuilds a receipt from a transaction hash. From its source (checked 2026-10-05): it only accepts the real USDC and EURC contracts, so a fake token gets "no transfer found"; it reads the first transfer only; it does not check who received the money; it does not see plain USDC sends (the ones that only write the system log); and it runs on Arc Testnet. | Assay names the fake and says NOT PAID: FAKE TOKEN, checks the money reached the right seller, counts plain USDC sends, and runs on mainnet. Assay's payment link borrows Payproof's good idea of keeping everything inside the link. |
 
 ## Run it
 

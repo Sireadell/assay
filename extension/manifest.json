@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "TruePaid for Arc",
+  "name": "Assay for Arc",
   "version": "0.1.0",
   "description": "On Arc explorer payment pages, shows whether you really got real USDC or a fake token with the same name.",
   "permissions": ["storage"],
-  "host_permissions": ["https://truepaid.vercel.app/*"],
-  "action": { "default_popup": "popup.html", "default_title": "TruePaid", "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" } },
+  "host_permissions": ["https://assay-arc.vercel.app/*"],
+  "action": { "default_popup": "popup.html", "default_title": "Assay", "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" } },
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
   "background": { "service_worker": "background.js" },
   "content_scripts": [{ "matches": ["https://explorer.arc.io/*"], "js": ["content.js"], "run_at": "document_idle" }]

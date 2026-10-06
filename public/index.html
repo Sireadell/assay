@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TruePaid</title>
+<title>Assay</title>
 <meta name="description" content="Paste an Arc payment and see if you got real USDC or a fake token with the same name.">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <main>
-  <p class="brand">TruePaid</p>
+  <p class="brand">Assay</p>
 
   <section class="banner" id="req" hidden>
     <p style="margin:0 0 6px">You've been asked to pay</p>
@@ -80,7 +80,7 @@
     <a class="btn wa" id="mWa" target="_blank" rel="noopener" hidden>Send link on WhatsApp</a>
   </div>
 
-  <small>TruePaid only counts the real USDC contract on Arc mainnet (<code>0x3600000000000000000000000000000000000000</code>). A token that only copies the name USDC does not count. It cannot tell you whether the goods arrived. It reads the public chain and never asks for your keys. On a computer? <a href="https://github.com/Sireadell/truepaid#chrome-extension" target="_blank" rel="noopener">Get the Chrome extension</a>, it shows the answer right on the Arc explorer.</small>
+  <small>Assay only counts the real USDC contract on Arc mainnet (<code>0x3600000000000000000000000000000000000000</code>). A token that only copies the name USDC does not count. It cannot tell you whether the goods arrived. It reads the public chain and never asks for your keys. On a computer? <a href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Get the Chrome extension</a>, it shows the answer right on the Arc explorer.</small>
 </main>
 <script type="module">
 import { LABEL, FAKE_EXPLAINER } from '/labels.js';
@@ -201,7 +201,7 @@ $('f').addEventListener('submit', async e => {
       const link = proofUrl(location.origin, hash, seller, expected);
       const a = document.createElement('a'); a.href = link; a.textContent = link;
       $('s').append(isRequest ? 'Proof link to send to the seller: ' : 'Proof link to send to the buyer: ', a);
-      $('wa').href = whatsappUrl(`TruePaid check: ${label}. ${d.reason} ${link}`);
+      $('wa').href = whatsappUrl(`Assay check: ${label}. ${d.reason} ${link}`);
       $('wa').hidden = false;
     }
   } catch {

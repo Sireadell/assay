@@ -1,4 +1,4 @@
-// TruePaid verdict engine. Pure functions, no network. Decides from a
+// Assay verdict engine. Pure functions, no network. Decides from a
 // transaction receipt whether a seller was paid in REAL USDC on Arc.
 //
 // Facts this relies on (read from docs.arc.io and confirmed on live

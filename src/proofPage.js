@@ -16,20 +16,20 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
     ? `<p class="meta">${isFake ? esc(FAKE_EXPLAINER) + ' ' : ''}<a href="${EXPLORER}/token/${esc(result.fakeToken)}" target="_blank" rel="noopener">${isFake ? 'See the fake token on the explorer' : 'See this token on the explorer'}</a>.</p>`
     : '';
   const link = proofUrl(origin, hash, seller, expected);
-  const wa = whatsappUrl(`TruePaid check: ${label}. ${result.reason} ${link}`);
+  const wa = whatsappUrl(`Assay check: ${label}. ${result.reason} ${link}`);
   const want = expected ? `<tr><td>Amount expected</td><td>${esc(expected)} USDC</td></tr>` : '';
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(label)} - TruePaid</title>
+<title>${esc(label)} - Assay</title>
 <meta name="description" content="${esc(label)}: ${esc(result.reason)}">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <main>
-  <p class="brand"><a href="/">TruePaid</a></p>
+  <p class="brand"><a href="/">Assay</a></p>
   <section class="card" role="status">
     <p class="verdict ${esc(result.verdict)}">${esc(label)}</p>
     <p class="why">${esc(result.reason)}</p>
@@ -53,8 +53,8 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
 export function proofError(message) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TruePaid</title><link rel="stylesheet" href="/style.css"></head>
-<body><main><p class="brand"><a href="/">TruePaid</a></p>
+<title>Assay</title><link rel="stylesheet" href="/style.css"></head>
+<body><main><p class="brand"><a href="/">Assay</a></p>
 <section class="card"><p class="verdict UNVERIFIED">CANNOT VERIFY</p><p class="why">${esc(message)}</p></section>
 <p><a class="btn" href="/">Check a payment</a></p></main></body></html>`;
 }

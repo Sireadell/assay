@@ -1,6 +1,6 @@
-// Asks the TruePaid checker for a verdict. Runs here, not in the page, so the
+// Asks the Assay checker for a verdict. Runs here, not in the page, so the
 // explorer page's own rules cannot block the request.
-const API = 'https://truepaid.vercel.app/api/check';
+const API = 'https://assay-arc.vercel.app/api/check';
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg?.type !== 'check') return;

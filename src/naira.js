@@ -1,5 +1,5 @@
 // Naira to USDC conversion. Pure functions, no network, no price feed.
-// The user types the rate, so TruePaid never guesses a price for them.
+// The user types the rate, so Assay never guesses a price for them.
 import { formatUsdc } from './verdict.js';
 
 // "12,500.50" -> 1250050n (hundredths). Null if not a plain positive number.

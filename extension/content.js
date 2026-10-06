@@ -1,4 +1,4 @@
-// On an Arc explorer transaction page, shows a TruePaid badge: did the saved
+// On an Arc explorer transaction page, shows a Assay badge: did the saved
 // address really receive real USDC in this transaction?
 // The explorer is a single-page app, so the address bar changes without a page
 // load. Watch it and re-check when the transaction changes.
@@ -9,7 +9,7 @@
     WRONG_CHAIN: 'WRONG CHAIN', UNVERIFIED: 'CANNOT VERIFY',
   };
   const COLOR = { PAID: '#0a7d3c', NOT_PAID: '#b3261e', FAKE_TOKEN: '#b3261e', WRONG_CHAIN: '#b3261e' };
-  const SITE = 'https://truepaid.vercel.app';
+  const SITE = 'https://assay-arc.vercel.app';
   const TX = /\/tx\/(0x[0-9a-fA-F]{64})/;
   let shown = '';
   let host = null;
@@ -17,7 +17,7 @@
   function box() {
     if (host && document.body.contains(host)) return host.shadowRoot;
     host = document.createElement('div');
-    host.id = 'truepaid-badge';
+    host.id = 'assay-badge';
     host.style.cssText = 'position:fixed;top:12px;right:12px;z-index:2147483647;max-width:360px';
     const root = host.attachShadow({ mode: 'open' });
     document.body.appendChild(host);
@@ -36,7 +36,7 @@
         button{all:unset;cursor:pointer;color:#6b6b64;padding:0 4px}
       </style>
       <div class="c" role="status">
-        <p class="k"><span>TruePaid</span><button aria-label="Close">x</button></p>
+        <p class="k"><span>Assay</span><button aria-label="Close">x</button></p>
         <p class="t"></p><p class="b"></p><p class="l"></p>
       </div>`;
     root.querySelector('.t').textContent = title;
@@ -59,14 +59,14 @@
     shown = hash;
     const { seller } = await chrome.storage.sync.get('seller');
     if (!seller) {
-      render({ title: 'Set your address', color: '#9a6700', body: 'Click the TruePaid button in your browser toolbar and save your Arc address. Then TruePaid can tell you if this payment really reached you.' });
+      render({ title: 'Set your address', color: '#9a6700', body: 'Click the Assay button in your browser toolbar and save your Arc address. Then Assay can tell you if this payment really reached you.' });
       return;
     }
     render({ title: 'Checking...', color: '#6b6b64', body: 'Reading this payment from Arc mainnet.' });
     const r = await chrome.runtime.sendMessage({ type: 'check', hash, seller });
     if (hash !== shown) return; // the page moved on while we waited
     if (!r || !r.ok) {
-      render({ title: 'CANNOT VERIFY', color: '#9a6700', body: 'Could not reach the TruePaid checker. Try again in a moment.' });
+      render({ title: 'CANNOT VERIFY', color: '#9a6700', body: 'Could not reach the Assay checker. Try again in a moment.' });
       return;
     }
     const d = r.d;
