@@ -73,7 +73,7 @@
     const proof = `${SITE}/p/${hash}?seller=${encodeURIComponent(seller)}`;
     const short = seller.slice(0, 6) + '...' + seller.slice(-4);
     const links = [['Open proof page', proof]];
-    if (d.fakeToken) links.push(['See the fake token', `https://explorer.arc.io/token/${d.fakeToken}`]);
+    if (d.fakeToken) links.push([d.verdict === 'FAKE_TOKEN' ? 'See the fake token' : 'See this token', `https://explorer.arc.io/token/${d.fakeToken}`]);
     render({
       title: LABEL[d.verdict] || d.verdict,
       color: COLOR[d.verdict] || '#9a6700',

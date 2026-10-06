@@ -11,8 +11,9 @@ const esc = (s) =>
 export function proofPage({ hash, seller, expected, result, origin = '' }) {
   const label = LABEL[result.verdict] || result.verdict;
   const short = hash.slice(0, 10) + '...' + hash.slice(-6);
+  const isFake = result.verdict === 'FAKE_TOKEN';
   const fake = result.fakeToken
-    ? `<p class="meta">${esc(FAKE_EXPLAINER)} <a href="${EXPLORER}/token/${esc(result.fakeToken)}" target="_blank" rel="noopener">See the fake token on the explorer</a>.</p>`
+    ? `<p class="meta">${isFake ? esc(FAKE_EXPLAINER) + ' ' : ''}<a href="${EXPLORER}/token/${esc(result.fakeToken)}" target="_blank" rel="noopener">${isFake ? 'See the fake token on the explorer' : 'See this token on the explorer'}</a>.</p>`
     : '';
   const link = proofUrl(origin, hash, seller, expected);
   const wa = whatsappUrl(`TruePaid check: ${label}. ${result.reason} ${link}`);

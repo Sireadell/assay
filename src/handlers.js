@@ -1,17 +1,11 @@
 // Request logic shared by the local server (src/server.js) and the Vercel
 // functions (api/). Returns plain {code, body} so each host can send it.
-import { fetchPayment } from './arcRpc.js';
-import { decide } from './verdict.js';
+import { checkPayment as check } from './check.js';
 import { proofPage, proofError } from './proofPage.js';
 import { extractHash } from './share.js';
 
 const HASH = /^0x[0-9a-fA-F]{64}$/;
 const BAD_HASH = 'That is not a transaction hash. It should start with 0x and be 66 characters long.';
-
-async function check(hash, seller, expected) {
-  const p = await fetchPayment(hash);
-  return { hash, ...decide({ ...p, seller, expected }) };
-}
 
 export async function handleCheck(params) {
   const raw = params.get('hash') || '';

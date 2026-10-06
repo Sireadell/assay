@@ -25,8 +25,10 @@ test('the two log streams are not double counted', () => {
 });
 
 test('lookalike token that pays the seller is FAKE_TOKEN', () => {
-  const r = decide({ receipt: fakeReceipt, tx: fakeTx, seller: FAKE_SELLER, expected: '20' });
+  const tokenNames = { '0x038442aadddaac9ac7ab8e18ac9a031641c5d398': { symbol: 'USDC', name: 'USDigitalCoin' } };
+  const r = decide({ receipt: fakeReceipt, tx: fakeTx, seller: FAKE_SELLER, expected: '20', tokenNames });
   assert.equal(r.verdict, 'FAKE_TOKEN');
+  assert.match(r.reason, /calls itself "USDC"/);
   assert.equal(r.fakeToken, '0x038442aadddaac9ac7ab8e18ac9a031641c5d398');
 });
 

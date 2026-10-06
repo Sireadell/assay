@@ -28,7 +28,7 @@ TruePaid reads the same transaction and says: NOT PAID: FAKE TOKEN.
 | WhatsApp share | One tap sends the verdict and the proof link. |
 | Payment link for sellers | A seller makes a link with their address, the amount and what it's for. The buyer opens it, pays, pastes the hash and gets a proof link to send back. Everything lives inside the link. |
 | Pasted explorer links | Paste `https://explorer.arc.io/tx/0x...` and TruePaid pulls the hash out. |
-| Why a fake is fake | The fake-token verdict links to the fake token on the explorer and says where real USDC lives. |
+| Why a fake is fake | TruePaid reads the name each token gives itself. "FAKE TOKEN" is only said when a token copies the USDC name (the example calls itself "USDC"). Any other token is "NOT PAID", with its own name. The verdict links to the token on the explorer. |
 
 ## Chrome extension
 
@@ -103,7 +103,7 @@ node src/cli.js <hash> <seller>
 | `src/stamp.js` | Builds the stamp transaction for the visitor's wallet. |
 | `contracts/TruePaidStamp.sol` | The stamp contract. |
 | `scripts/` | Compile, deploy and a live stamp check. |
-| `test/` | 33 tests, including two real Arc mainnet transactions saved as fixtures. |
+| `test/` | 37 tests, including two real Arc mainnet transactions saved as fixtures. |
 
 ## License
 

@@ -81,3 +81,24 @@ export async function fetchPayment(hash) {
   ]);
   return { chainId: Number(BigInt(chainHex)), receipt, tx };
 }
+
+// Decode an ABI string, or a bytes32 for old tokens that return one.
+export function decodeName(hex) {
+  if (!hex || hex === '0x') return '';
+  const h = hex.slice(2);
+  if (h.length > 128) {
+    const len = parseInt(h.slice(64, 128), 16);
+    if (len > 0 && len <= 100) return Buffer.from(h.slice(128, 128 + len * 2), 'hex').toString('utf8');
+    return '';
+  }
+  return Buffer.from(h.slice(0, 64), 'hex').toString('utf8').replace(/\0+$/, '');
+}
+
+// The symbol and name a token contract gives itself. Empty strings if it
+// will not say.
+export async function fetchTokenName(address) {
+  const read = (data) =>
+    call('eth_call', [{ to: address, data }, 'latest']).then(decodeName, () => '');
+  const [symbol, name] = await Promise.all([read('0x95d89b41'), read('0x06fdde03')]);
+  return { symbol: symbol.replace(/[^\x20-\x7e]/g, ''), name: name.replace(/[^\x20-\x7e]/g, '') };
+}

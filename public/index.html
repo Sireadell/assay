@@ -192,8 +192,10 @@ $('f').addEventListener('submit', async e => {
     if (d.fakeToken) {
       const a = document.createElement('a');
       a.href = EXPLORER + '/token/' + d.fakeToken; a.target = '_blank'; a.rel = 'noopener';
-      a.textContent = 'See the fake token on the explorer';
-      $('x').append(FAKE_EXPLAINER + ' ', a, '.');
+      const isFake = d.verdict === 'FAKE_TOKEN';
+      a.textContent = isFake ? 'See the fake token on the explorer' : 'See this token on the explorer';
+      if (isFake) $('x').append(FAKE_EXPLAINER + ' ');
+      $('x').append(a, '.');
     }
     if (/^0x[0-9a-fA-F]{64}$/.test(hash)) {
       const link = proofUrl(location.origin, hash, seller, expected);

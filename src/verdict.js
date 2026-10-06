@@ -71,8 +71,10 @@ export function parseUsdc(text) {
  * @param {string} p.seller        the address that should have been paid
  * @param {string} [p.expected]    expected amount in USDC, e.g. "20" or "12.5"
  * @param {number|null} [p.chainId] chain id the RPC reported
+ * @param {Object<string,{symbol?:string,name?:string}>} [p.tokenNames]
+ *        names the other tokens give themselves, keyed by lowercase contract
  */
-export function decide({ receipt, tx, seller, expected, chainId = ARC_CHAIN_ID }) {
+export function decide({ receipt, tx, seller, expected, chainId = ARC_CHAIN_ID, tokenNames }) {
   if (chainId !== null && chainId !== ARC_CHAIN_ID) {
     return v('WRONG_CHAIN', `This node is chain ${chainId}, not Arc mainnet (${ARC_CHAIN_ID}).`);
   }
@@ -107,11 +109,22 @@ export function decide({ receipt, tx, seller, expected, chainId = ARC_CHAIN_ID }
     }
     if (fakes.length) {
       const f = fakes[0];
-      return v(
-        'FAKE_TOKEN',
-        `The seller received a token that only borrows the name USDC (contract ${f.emitter}). No real USDC reached the seller.`,
-        { fakeToken: f.emitter, fakeRawAmount: f.value.toString() },
-      );
+      const info = (tokenNames || {})[f.emitter];
+      const extra = { fakeToken: f.emitter, fakeRawAmount: f.value.toString() };
+      if (info && copiesUsdc(info)) {
+        return v(
+          'FAKE_TOKEN',
+          `The seller received a token that calls itself ${quote(info.symbol || info.name)} but is not real USDC (contract ${f.emitter}). No real USDC reached the seller.`,
+          { ...extra, fakeSymbol: info.symbol || '' },
+        );
+      }
+      // A token that does not copy the USDC name is not a fake USDC, just not
+      // USDC. Say what it is, or that we could not read its name.
+      const what = info && (info.symbol || info.name) ? `a different token (${info.symbol || info.name})` : 'a token that is not real USDC';
+      return v('NOT_PAID', `The seller received ${what}, contract ${f.emitter}. No real USDC reached the seller.`, {
+        ...extra,
+        otherToken: true,
+      });
     }
     return v('NOT_PAID', 'No real USDC in this transaction reached the seller address.');
   }
@@ -123,6 +136,20 @@ export function decide({ receipt, tx, seller, expected, chainId = ARC_CHAIN_ID }
     return v('PARTIAL', `The seller received ${got} real USDC, which is less than the ${formatUsdc(want)} expected.`, { received: got });
   }
   return v('OVERPAID', `The seller received ${got} real USDC, which is more than the ${formatUsdc(want)} expected.`, { received: got });
+}
+
+// A lookalike copies the USDC name: "USDC", "USDC.e", "USD Coin", "USDC Token".
+export function copiesUsdc({ symbol = '', name = '' }) {
+  const t = `${symbol} ${name}`.toLowerCase().replace(/[^a-z]/g, '');
+  return t.includes('usdc') || t.includes('usdcoin');
+}
+
+const quote = (s) => `"${String(s).slice(0, 30)}"`;
+
+// Contracts of the other tokens the seller received, so the caller can look
+// up their names before deciding.
+export function otherTokens(receipt, seller) {
+  return [...new Set(realUsdcReceived(receipt, seller).fakes.map((f) => f.emitter))];
 }
 
 function v(verdict, reason, extra = {}) {
