@@ -53,7 +53,7 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
   <p class="meta">This page was read from Arc mainnet when you opened it. Nothing is saved. Open it again any time and it checks again.</p>
   <p><a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">Send proof to the buyer</a></p>
   <p class="meta"><a href="${EXPLORER}/tx/${esc(hash)}" target="_blank" rel="noopener">Open this transaction on the Arc explorer</a></p>
-  <p><a class="btn ghost" href="/?hash=${encodeURIComponent(hash)}&seller=${encodeURIComponent(seller)}">Check another payment</a></p>
+  <p><a class="btn ghost" href="/?hash=${encodeURIComponent(hash)}&seller=${encodeURIComponent(seller)}#check/one">Check another payment</a></p>
   <small>Short form: <code>${esc(short)}</code></small>
 </main>
 </body>

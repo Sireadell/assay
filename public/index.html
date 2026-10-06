@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Assay</title>
-<meta name="description" content="Paste an Arc payment and see if you got real USDC or a fake token with the same name.">
+<meta name="description" content="Paste your Arc address and see which payments were real USDC and which were a fake token with the same name.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
@@ -14,101 +14,161 @@
 <body>
 <header class="hero">
 <div class="wrap">
-  <p class="top"><span class="brand"><i class="mark"></i>Assay</span><a class="toplink" href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Chrome extension</a></p>
+  <p class="top"><a class="brand" href="#check"><i class="mark"></i>Assay</a><a class="toplink" href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Chrome extension</a></p>
 
   <section class="banner" id="req" hidden>
-    <p style="margin:0 0 6px">You've been asked to pay</p>
+    <p style="margin:0 0 4px">You've been asked to pay</p>
     <b id="reqAmt"></b>
     <p class="meta" id="reqNote"></p>
-    <p class="meta" style="margin-top:10px">Send real USDC on Arc to this address:</p>
+    <p class="meta" style="margin-top:12px">1. Send real USDC on Arc to this address</p>
     <p style="margin:4px 0"><code id="reqTo"></code></p>
     <button class="ghost" id="copyTo" type="button">Copy address</button>
-    <p class="meta">After you pay, paste your transaction below and press Check. Then send the proof link back to the seller.</p>
   </section>
 
-  <div id="intro">
-    <h1>Did you <span class="hl">really</span> get paid?</h1>
-    <p class="lead">A buyer sends USDC on Arc and the explorer says "Transfer 20 USDC". It can be a fake token with the same name. Assay shows what truly reached you.</p>
+  <div id="heroCheck" data-hero="check">
+    <div data-mode="mine">
+      <h1>Did you <span class="hl">really</span> get paid?</h1>
+      <p class="lead">A buyer sends USDC on Arc and the explorer says "Transfer 20 USDC". It can be a fake token with the same name. Assay shows what truly reached you.</p>
+    </div>
+    <div data-mode="one" hidden>
+      <h1>Check one <span class="hl">payment</span></h1>
+      <p class="lead">The buyer sent you a transaction link? Paste it and see if it was real USDC.</p>
+    </div>
+    <div class="seg" role="tablist" aria-label="What to check">
+      <a href="#check" id="segMine" role="tab">My payments</a>
+      <a href="#check/one" id="segOne" role="tab">One payment</a>
+    </div>
+    <section id="inbox" data-mode="mine">
+      <div class="find">
+        <label class="sr" for="iAddr">Your Arc address</label>
+        <input id="iAddr" placeholder="Paste your Arc address (0x...)" autocomplete="off" spellcheck="false">
+        <button id="iBtn" type="button">Check</button>
+      </div>
+      <p class="hint" id="iMsg" role="status" aria-live="polite"></p>
+    </section>
   </div>
 
-  <section id="inbox">
-    <div class="find">
-      <label class="sr" for="iAddr">Your Arc address</label>
-      <input id="iAddr" placeholder="Paste your Arc address (0x...)" autocomplete="off" spellcheck="false">
-      <button id="iBtn" type="button">Check</button>
-    </div>
-    <p class="hint" id="iMsg" role="status" aria-live="polite"></p>
-    <button class="try" id="tryBtn" type="button">See a fake payment caught</button>
-  </section>
+  <div data-hero="get-paid" hidden>
+    <h1>Get paid in <span class="hl">USDC</span></h1>
+    <p class="lead">Make a link and send it to your buyer. They open it and see exactly what to pay and where.</p>
+  </div>
+
+  <div data-hero="learn" hidden>
+    <h1>Real or <span class="hl">fake</span>?</h1>
+    <p class="lead">What to look for, in plain words.</p>
+  </div>
 </div>
 </header>
 <main>
-  <div class="chips" id="iChips"></div>
-  <ul class="inbox" id="iList"></ul>
-  <button class="more" id="iMore" type="button" hidden>Scan older payments</button>
-
-  <section class="card vcard" id="out" role="status" aria-live="polite" hidden>
-    <p class="verdict" id="v"></p>
-    <p class="sub" id="sub"></p>
-    <p class="why" id="r"></p>
-    <div class="facts2" id="facts"></div>
-    <p class="meta" id="x"></p>
-    <p class="share" id="s"></p>
-    <a class="btn" id="wa" target="_blank" rel="noopener" hidden>Send proof to the buyer</a>
-    <button id="stampBtn" class="ghost" type="button" hidden>Stamp this verdict on Arc</button>
-    <p class="meta" id="stampMsg"></p>
-  </section>
-
-  <details id="one">
-  <summary>Have a transaction link? Check one payment</summary>
-  <form id="f">
-    <label for="hash">Transaction hash, or the explorer link for it</label>
-    <input id="hash" required placeholder="0x... or https://explorer.arc.io/tx/0x..." autocomplete="off" spellcheck="false">
-    <p class="hint" id="hashHint"></p>
-    <label for="seller" id="sellerLabel">Your Arc address (where the money should arrive)</label>
-    <input id="seller" required placeholder="0x..." autocomplete="off" spellcheck="false">
-    <div class="row">
-      <div>
-        <label for="naira">Price in naira (optional)</label>
-        <input id="naira" inputmode="decimal" placeholder="30000" autocomplete="off">
-      </div>
-      <div>
-        <label for="rate">Naira for 1 USDC</label>
-        <input id="rate" inputmode="decimal" placeholder="1500" autocomplete="off">
-      </div>
+  <div data-view="check">
+    <div data-mode="mine">
+      <div class="chips" id="iChips"></div>
+      <ul class="inbox" id="iList"></ul>
+      <button class="more" id="iMore" type="button" hidden>Scan older payments</button>
     </div>
-    <p class="hint" id="conv"></p>
-    <label for="expected">Amount expected in USDC (optional)</label>
-    <input id="expected" inputmode="decimal" placeholder="20" autocomplete="off">
-    <button id="b" type="submit">Check this payment</button>
-  </form>
-  </details>
 
+    <section class="card" id="one" data-mode="one" hidden>
+      <h2 id="oneTitle" class="buyer-only">2. After you pay, paste your transaction link</h2>
+      <form id="f">
+        <label for="hash">Transaction hash, or the explorer link for it</label>
+        <input id="hash" required placeholder="0x... or https://explorer.arc.io/tx/0x..." autocomplete="off" spellcheck="false">
+        <p class="hint" id="hashHint"></p>
+        <div class="opt">
+          <label for="seller" id="sellerLabel">Your Arc address (where the money should arrive)</label>
+          <input id="seller" required placeholder="0x..." autocomplete="off" spellcheck="false">
+          <div class="row">
+            <div>
+              <label for="naira">Price in naira (optional)</label>
+              <input id="naira" inputmode="decimal" placeholder="30000" autocomplete="off">
+            </div>
+            <div>
+              <label for="rate">Naira for 1 USDC</label>
+              <input id="rate" inputmode="decimal" placeholder="1500" autocomplete="off">
+            </div>
+          </div>
+          <p class="hint" id="conv"></p>
+          <label for="expected">Amount expected in USDC (optional)</label>
+          <input id="expected" inputmode="decimal" placeholder="20" autocomplete="off">
+        </div>
+        <button id="b" type="submit">Check this payment</button>
+      </form>
+      <button class="ghost try" id="tryBtn" type="button">See a fake payment caught</button>
+    </section>
 
-  <div id="maker">
-    <hr>
-    <h2>Selling something? Send your buyer a payment link</h2>
-    <p class="meta" style="margin-top:0">The link shows your buyer the amount and your address. After they pay, they get a proof link to send you. Nothing is saved anywhere, everything is inside the link.</p>
-    <label for="mSeller">Your Arc address</label>
-    <input id="mSeller" placeholder="0x..." autocomplete="off" spellcheck="false">
-    <div class="row">
-      <div>
-        <label for="mAmt">Amount in USDC</label>
-        <input id="mAmt" inputmode="decimal" placeholder="20" autocomplete="off">
-      </div>
-      <div>
-        <label for="mNote">What it's for (optional)</label>
-        <input id="mNote" maxlength="80" placeholder="2 bags of rice" autocomplete="off">
-      </div>
-    </div>
-    <p class="hint" id="mConv"></p>
-    <button class="ghost" id="mMake" type="button">Make payment link</button>
-    <p class="share" id="mOut"></p>
-    <a class="btn wa" id="mWa" target="_blank" rel="noopener" hidden>Send link on WhatsApp</a>
+    <section class="card vcard" id="out" role="status" aria-live="polite" hidden>
+      <p class="verdict" id="v"></p>
+      <p class="sub" id="sub"></p>
+      <p class="why" id="r"></p>
+      <div class="facts2" id="facts"></div>
+      <p class="meta" id="x"></p>
+      <p class="share" id="s"></p>
+      <a class="btn" id="wa" target="_blank" rel="noopener" hidden>Send proof to the buyer</a>
+      <button id="stampBtn" class="ghost" type="button" hidden>Stamp this verdict on Arc</button>
+      <p class="meta" id="stampMsg"></p>
+    </section>
   </div>
 
-  <small>Assay only counts the real USDC contract on Arc mainnet (<code>0x3600000000000000000000000000000000000000</code>). A token that only copies the name USDC does not count. It cannot tell you whether the goods arrived. It reads the public chain and never asks for your keys. On a computer? <a href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Get the Chrome extension</a>, it shows the answer right on the Arc explorer.</small>
+  <div data-view="get-paid" hidden>
+    <section class="card" id="maker">
+      <label for="mSeller" style="margin-top:0">Your Arc address</label>
+      <input id="mSeller" placeholder="0x..." autocomplete="off" spellcheck="false">
+      <div class="row">
+        <div>
+          <label for="mNaira">Price in naira (optional)</label>
+          <input id="mNaira" inputmode="decimal" placeholder="30000" autocomplete="off">
+        </div>
+        <div>
+          <label for="mRate">Naira for 1 USDC</label>
+          <input id="mRate" inputmode="decimal" placeholder="1500" autocomplete="off">
+        </div>
+      </div>
+      <p class="hint" id="mConv"></p>
+      <div class="row">
+        <div>
+          <label for="mAmt">Amount in USDC</label>
+          <input id="mAmt" inputmode="decimal" placeholder="20" autocomplete="off">
+        </div>
+        <div>
+          <label for="mNote">What it's for (optional)</label>
+          <input id="mNote" maxlength="80" placeholder="2 bags of rice" autocomplete="off">
+        </div>
+      </div>
+      <button id="mMake" type="button">Make payment link</button>
+      <p class="share" id="mOut"></p>
+      <a class="btn wa" id="mWa" target="_blank" rel="noopener" hidden>Send link on WhatsApp</a>
+      <p class="meta">The link shows your buyer the amount and your address. Nothing is saved anywhere, everything is inside the link. After they pay, they paste their transaction and send you a proof link.</p>
+    </section>
+  </div>
+
+  <div data-view="learn" hidden>
+    <section class="card">
+      <h3>The explorer can say the same thing</h3>
+      <p>A fake token can show up as "Transfer 20 USDC" on the Arc explorer, the same words as a real payment. A real USDC transfer carries a small "Circle" label above the headline. The fake we found has none. <a href="https://explorer.arc.io/tx/0x4a36399e8e34ebdcba92cee84ff0a1dc574ee03086d99ca14197ba2adcbfab85" target="_blank" rel="noopener">See that fake on the explorer</a>.</p>
+    </section>
+    <section class="card">
+      <h3>Real USDC lives at one address</h3>
+      <p><code>0x3600000000000000000000000000000000000000</code></p>
+      <p>Assay counts only this one. Any other token is not real USDC, even if it calls itself USDC.</p>
+    </section>
+    <section class="card">
+      <h3>Chrome extension</h3>
+      <p>On a computer, the extension shows the answer right on the Arc explorer page, so there is nothing to copy. Works in Chrome and Edge. <a href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Install steps</a>.</p>
+    </section>
+    <section class="card">
+      <h3>What is a stamp?</h3>
+      <p>After a check you can save the verdict on Arc with one wallet approval, about 0.001 USDC. It is a permanent public note that someone marked this payment. Anyone can stamp, so a stamp shows who claimed it, not what is true. The check is what proves it.</p>
+    </section>
+    <section class="card">
+      <h3>What Assay cannot do</h3>
+      <p>It cannot tell you whether the goods arrived. It reads the public chain and never asks for your keys.</p>
+    </section>
+  </div>
 </main>
+<nav class="tabbar" aria-label="Main">
+  <a href="#check" data-tab="check">Check</a>
+  <a href="#get-paid" data-tab="get-paid">Get paid</a>
+  <a href="#learn" data-tab="learn">Learn</a>
+</nav>
 <script type="module">
 import { LABEL, FAKE_EXPLAINER, TONE, verdictHead, verdictFacts } from '/labels.js';
 import { nairaToUsdc } from '/naira.js';
@@ -124,28 +184,53 @@ const params = new URLSearchParams(location.search);
 const isRequest = params.get('request') === '1' && ADDR.test(params.get('seller') || '');
 
 $('hash').value = params.get('hash') || '';
-if (params.get('hash')) $('one').open = true;
 $('seller').value = params.get('seller') || store.get('seller');
 $('expected').value = params.get('expected') || '';
 $('naira').value = params.get('naira') || '';
 $('rate').value = store.get('rate');
+$('mRate').value = store.get('rate');
 $('mSeller').value = store.get('seller');
 $('iAddr').value = params.get('seller') || store.get('seller');
 
-// Payment request mode: a buyer opened a link a seller sent them.
+// Three places: Check, Get paid, Learn. The address bar fragment says which one,
+// so the back button works and a link can point at any of them.
+const VIEWS = ['check', 'get-paid', 'learn'];
+function route(){
+  let view = 'check', mode = params.get('hash') ? 'one' : 'mine';
+  if (isRequest) mode = 'one';
+  else {
+    const [v, m] = location.hash.replace('#', '').split('/');
+    if (VIEWS.includes(v)) view = v;
+    if (v === 'check') mode = m === 'one' ? 'one' : 'mine';
+  }
+  for (const el of document.querySelectorAll('[data-view]')) el.hidden = el.dataset.view !== view;
+  for (const el of document.querySelectorAll('[data-hero]')) el.hidden = isRequest || el.dataset.hero !== view;
+  for (const el of document.querySelectorAll('[data-mode]')) el.hidden = el.dataset.mode !== mode;
+  for (const a of document.querySelectorAll('[data-tab]')) {
+    if (a.dataset.tab === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  }
+  $('segMine').setAttribute('aria-selected', String(mode === 'mine'));
+  $('segOne').setAttribute('aria-selected', String(mode === 'one'));
+  if (!isRequest) window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+
+// Buyer screen: a buyer opened a payment link a seller sent. No menu, no seller tools.
 if (isRequest) {
-  $('req').hidden = false; $('intro').hidden = true; $('maker').hidden = true; $('inbox').hidden = true; $('one').open = true; $('one').querySelector('summary').hidden = true;
+  document.body.classList.add('buyer');
+  $('req').hidden = false;
   const amt = params.get('expected');
   $('reqAmt').textContent = amt ? amt + ' USDC' : 'in USDC';
   $('reqNote').textContent = params.get('note') ? 'For: ' + params.get('note') : '';
   $('reqTo').textContent = params.get('seller');
   $('seller').readOnly = true; $('expected').readOnly = true;
-  $('sellerLabel').textContent = 'Seller address (from the link)';
+  $('b').textContent = 'Get my proof link';
   $('copyTo').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(params.get('seller')); $('copyTo').textContent = 'Copied'; }
     catch { $('copyTo').textContent = 'Select the address above and copy it'; }
   });
 }
+route();
 
 // Accept a pasted explorer link and keep only the hash.
 function cleanHash(){
@@ -168,7 +253,7 @@ function convert(){
   return usdc;
 }
 $('naira').addEventListener('input', convert);
-$('rate').addEventListener('input', () => { store.set('rate', $('rate').value.trim()); convert(); });
+$('rate').addEventListener('input', () => { store.set('rate', $('rate').value.trim()); $('mRate').value = $('rate').value.trim(); convert(); });
 convert();
 
 let last = null;
@@ -177,7 +262,7 @@ let demo = false;
 const EXAMPLE = { hash: '0x4a36399e8e34ebdcba92cee84ff0a1dc574ee03086d99ca14197ba2adcbfab85', seller: '0xad3cd9a7995c2895ce41f9c0220deb344173ba4b', expected: '20' };
 $('tryBtn').addEventListener('click', () => {
   $('hash').value = EXAMPLE.hash; $('seller').value = EXAMPLE.seller; $('expected').value = EXAMPLE.expected;
-  $('one').open = true; demo = true;
+  demo = true;
   $('f').requestSubmit();
 });
 function showStamp(){
@@ -209,6 +294,7 @@ $('stampBtn').addEventListener('click', async () => {
 
 $('f').addEventListener('submit', async e => {
   e.preventDefault();
+  const idle = isRequest ? 'Get my proof link' : 'Check this payment';
   $('b').disabled = true; $('b').textContent = 'Checking...';
   const hash = cleanHash(), seller = $('seller').value.trim();
   if (!isRequest && !demo) store.set('seller', seller);
@@ -247,6 +333,7 @@ $('f').addEventListener('submit', async e => {
       const link = proofUrl(location.origin, hash, seller, expected);
       const a = document.createElement('a'); a.href = link; a.textContent = link;
       $('s').append(isRequest ? 'Proof link to send to the seller: ' : 'Proof link to send to the buyer: ', a);
+      $('wa').textContent = isRequest ? 'Send proof to the seller' : 'Send proof to the buyer';
       $('wa').href = whatsappUrl(`Assay check: ${label}. ${d.reason} ${link}`);
       $('wa').hidden = false;
     }
@@ -256,7 +343,7 @@ $('f').addEventListener('submit', async e => {
     $('v').textContent = 'CANNOT VERIFY';
     $('r').textContent = 'Could not reach the checker. Try again.';
   }
-  $('b').disabled = false; $('b').textContent = 'Check this payment';
+  $('b').disabled = false; $('b').textContent = idle;
   out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
@@ -340,18 +427,27 @@ $('iBtn').addEventListener('click', () => {
   if (!ADDR.test(seller)) { $('iMsg').textContent = 'Type your Arc address first. It starts with 0x and is 42 characters long.'; return; }
   store.set('seller', seller);
   $('iList').textContent = ''; $('iChips').textContent = '';
-  $('seller').value = seller;
+  $('seller').value = seller; $('mSeller').value = seller;
   scan = { seller, next: null, latest: null, hours: 0, failed: 0, truncated: false, count: { REAL: 0, FAKE: 0, EURC: 0, OTHER: 0 } };
   scanPages(3);
 });
+$('iAddr').addEventListener('keydown', e => { if (e.key === 'Enter') $('iBtn').click(); });
 $('iMore').addEventListener('click', () => scanPages(3));
 
-// Seller side: make a payment link for a buyer.
+// Get paid: make a payment link for a buyer. A naira price and today's rate fill in the USDC amount.
+let amtTyped = false;
 function makerConvert(){
-  const usdc = nairaToUsdc($('naira').value, $('rate').value);
-  $('mConv').textContent = usdc && !$('mAmt').value.trim() ? `Tip: your naira price above is about ${usdc} USDC.` : '';
+  const usdc = nairaToUsdc($('mNaira').value, $('mRate').value);
+  const hint = $('mConv');
+  if (!$('mNaira').value.trim()) { hint.textContent = ''; return; }
+  if (!$('mRate').value.trim()) { hint.textContent = 'Type today\'s rate to see the USDC amount.'; return; }
+  if (!usdc) { hint.textContent = 'Use plain numbers, like 30000 and 1500.'; return; }
+  hint.textContent = `${$('mNaira').value.trim()} naira is about ${usdc} USDC at ${$('mRate').value.trim()} naira per USDC.`;
+  if (!amtTyped) $('mAmt').value = usdc;
 }
-$('naira').addEventListener('input', makerConvert);
+$('mNaira').addEventListener('input', makerConvert);
+$('mRate').addEventListener('input', () => { store.set('rate', $('mRate').value.trim()); $('rate').value = $('mRate').value.trim(); makerConvert(); });
+$('mAmt').addEventListener('input', () => { amtTyped = $('mAmt').value.trim() !== ''; });
 $('mMake').addEventListener('click', () => {
   const seller = $('mSeller').value.trim(), amount = $('mAmt').value.trim();
   $('mOut').textContent = ''; $('mWa').hidden = true;
