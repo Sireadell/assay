@@ -23,9 +23,21 @@
 
   <div id="intro">
     <h1>Did you really get paid in USDC?</h1>
-    <p class="lead">A buyer sends you a payment on Arc and the explorer says "Transfer 20 USDC". It can be a fake token that only copies the name. Paste the payment here and get one clear answer.</p>
+    <p class="lead">A buyer sends you a payment on Arc and the explorer says "Transfer 20 USDC". It can be a fake token that only copies the name. Type your address and Assay shows what really reached you.</p>
   </div>
 
+  <section id="inbox">
+    <label for="iAddr" style="margin-top:0">Your Arc address</label>
+    <input id="iAddr" placeholder="0x..." autocomplete="off" spellcheck="false">
+    <button id="iBtn" type="button">Check my payments</button>
+    <p class="hint" id="iMsg" role="status" aria-live="polite"></p>
+    <div class="chips" id="iChips"></div>
+    <ul class="inbox" id="iList"></ul>
+    <button class="ghost" id="iMore" type="button" hidden>Scan older payments</button>
+  </section>
+
+  <details id="one">
+  <summary>Have a transaction link? Check one payment</summary>
   <form id="f">
     <label for="hash">Transaction hash, or the explorer link for it</label>
     <input id="hash" required placeholder="0x... or https://explorer.arc.io/tx/0x..." autocomplete="off" spellcheck="false">
@@ -47,28 +59,19 @@
     <input id="expected" inputmode="decimal" placeholder="20" autocomplete="off">
     <button id="b" type="submit">Check this payment</button>
   </form>
+  </details>
 
-  <section class="card" id="out" role="status" aria-live="polite" hidden>
+  <section class="card vcard" id="out" role="status" aria-live="polite" hidden>
     <p class="verdict" id="v"></p>
+    <p class="sub" id="sub"></p>
     <p class="why" id="r"></p>
+    <div class="facts2" id="facts"></div>
     <p class="meta" id="x"></p>
     <p class="share" id="s"></p>
-    <a class="btn wa" id="wa" target="_blank" rel="noopener" hidden>Share on WhatsApp</a>
-    <button id="stampBtn" type="button" hidden>Stamp this verdict on Arc</button>
+    <a class="btn" id="wa" target="_blank" rel="noopener" hidden>Send proof to the buyer</a>
+    <button id="stampBtn" class="ghost" type="button" hidden>Stamp this verdict on Arc</button>
     <p class="meta" id="stampMsg"></p>
   </section>
-
-  <div id="inbox">
-    <hr>
-    <h2>Not sure which payment? Scan your inbox</h2>
-    <p class="meta" style="margin-top:0">Type only your address. Assay lists the payments that reached it in the last day, and marks each one as real USDC or not. No transaction hash needed.</p>
-    <label for="iAddr">Your Arc address</label>
-    <input id="iAddr" placeholder="0x..." autocomplete="off" spellcheck="false">
-    <button class="ghost" id="iBtn" type="button">Scan my last 24 hours</button>
-    <p class="hint" id="iMsg" role="status" aria-live="polite"></p>
-    <ul class="inbox" id="iList"></ul>
-    <button class="ghost" id="iMore" type="button" hidden>Scan older payments</button>
-  </div>
 
   <div id="maker">
     <hr>
@@ -95,7 +98,7 @@
   <small>Assay only counts the real USDC contract on Arc mainnet (<code>0x3600000000000000000000000000000000000000</code>). A token that only copies the name USDC does not count. It cannot tell you whether the goods arrived. It reads the public chain and never asks for your keys. On a computer? <a href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Get the Chrome extension</a>, it shows the answer right on the Arc explorer.</small>
 </main>
 <script type="module">
-import { LABEL, FAKE_EXPLAINER } from '/labels.js';
+import { LABEL, FAKE_EXPLAINER, TONE, verdictHead, verdictFacts } from '/labels.js';
 import { nairaToUsdc } from '/naira.js';
 import { STAMP_CODE, ARC_CHAIN, EXPLORER, stampTx } from '/stamp.js';
 import { extractHash, proofUrl, whatsappUrl, requestUrl } from '/share.js';
@@ -109,6 +112,7 @@ const params = new URLSearchParams(location.search);
 const isRequest = params.get('request') === '1' && ADDR.test(params.get('seller') || '');
 
 $('hash').value = params.get('hash') || '';
+if (params.get('hash')) $('one').open = true;
 $('seller').value = params.get('seller') || store.get('seller');
 $('expected').value = params.get('expected') || '';
 $('naira').value = params.get('naira') || '';
@@ -118,7 +122,7 @@ $('iAddr').value = params.get('seller') || store.get('seller');
 
 // Payment request mode: a buyer opened a link a seller sent them.
 if (isRequest) {
-  $('req').hidden = false; $('intro').hidden = true; $('maker').hidden = true; $('inbox').hidden = true;
+  $('req').hidden = false; $('intro').hidden = true; $('maker').hidden = true; $('inbox').hidden = true; $('one').open = true; $('one').querySelector('summary').hidden = true;
   const amt = params.get('expected');
   $('reqAmt').textContent = amt ? amt + ' USDC' : 'in USDC';
   $('reqNote').textContent = params.get('note') ? 'For: ' + params.get('note') : '';
@@ -199,9 +203,17 @@ $('f').addEventListener('submit', async e => {
     last = { hash, seller, verdict: d.verdict };
     showStamp();
     const label = LABEL[d.verdict] || d.verdict;
-    $('v').className = 'verdict ' + d.verdict;
-    $('v').textContent = label;
+    const [word, sub] = verdictHead(d.verdict);
+    out.className = 'card vcard tone-' + (TONE[d.verdict] || 'warn');
+    $('v').textContent = word;
+    $('sub').textContent = sub; $('sub').hidden = !sub;
     $('r').textContent = d.reason;
+    $('facts').textContent = '';
+    for (const [k, v] of verdictFacts(d, expected)) {
+      const row = document.createElement('div');
+      const key = document.createElement('span'); key.textContent = k;
+      row.append(key, v); $('facts').append(row);
+    }
     if (d.fakeToken) {
       const a = document.createElement('a');
       a.href = EXPLORER + '/token/' + d.fakeToken; a.target = '_blank'; a.rel = 'noopener';
@@ -219,10 +231,12 @@ $('f').addEventListener('submit', async e => {
     }
   } catch {
     out.hidden = false; last = null; showStamp();
-    $('v').className = 'verdict UNVERIFIED'; $('v').textContent = 'CANNOT VERIFY';
+    out.className = 'card vcard tone-warn'; $('sub').hidden = true; $('facts').textContent = '';
+    $('v').textContent = 'CANNOT VERIFY';
     $('r').textContent = 'Could not reach the checker. Try again.';
   }
   $('b').disabled = false; $('b').textContent = 'Check this payment';
+  out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
 // Inbox scan: the payments that reached an address, newest first, 8 hours per
@@ -236,6 +250,7 @@ function ago(blocks){
 }
 function addRow(it, latest){
   const li = document.createElement('li');
+  li.className = 'k-' + it.kind;
   const b = document.createElement('b');
   b.className = it.kind;
   b.textContent = it.label + (it.amount ? ': ' + it.amount : '');
@@ -255,14 +270,20 @@ function addRow(it, latest){
   $('iList').append(li);
 }
 const total = () => Object.values(scan.count).reduce((a, n) => a + n, 0);
+function chips(){
+  const c = scan.count, box = $('iChips');
+  box.textContent = '';
+  const add = (n, text, tone) => { if (!n) return; const e = document.createElement('span'); e.className = 'chip ' + tone; e.textContent = n + ' ' + text; box.append(e); };
+  add(c.REAL, 'real USDC', 'ok');
+  add(c.FAKE, c.FAKE > 1 ? 'lookalikes' : 'lookalike', 'bad');
+  add(c.EURC, 'EURC', 'warn');
+  add(c.OTHER, c.OTHER > 1 ? 'other tokens' : 'other token', 'warn');
+}
 function summary(){
-  const c = scan.count, t = total();
-  if (!t) return `Last ${scan.hours} hours: no payments reached this address.`;
-  const parts = [c.REAL + ' real USDC'];
-  if (c.FAKE) parts.push(c.FAKE + (c.FAKE > 1 ? ' lookalikes' : ' lookalike'));
-  if (c.EURC) parts.push(c.EURC + ' EURC');
-  if (c.OTHER) parts.push(c.OTHER + ' other token' + (c.OTHER > 1 ? 's' : ''));
-  return `Last ${scan.hours} hours: ${t} payment${t > 1 ? 's' : ''} (${parts.join(', ')}).`;
+  const t = total();
+  return t
+    ? `Last ${scan.hours} hours: ${t} payment${t > 1 ? 's' : ''} reached this address.`
+    : `Last ${scan.hours} hours: no payments reached this address.`;
 }
 async function scanPages(n){
   $('iBtn').disabled = true; $('iMore').hidden = true;
@@ -281,6 +302,7 @@ async function scanPages(n){
     }
     if (scan.latest === null) scan.latest = d.toBlock;
     for (const it of d.items) { scan.count[it.kind]++; addRow(it, scan.latest); }
+    chips();
     scan.hours += d.hoursScanned;
     scan.failed += d.failedWindows;
     if (d.truncated) scan.truncated = true;
@@ -296,7 +318,8 @@ $('iBtn').addEventListener('click', () => {
   const seller = $('iAddr').value.trim();
   if (!ADDR.test(seller)) { $('iMsg').textContent = 'Type your Arc address first. It starts with 0x and is 42 characters long.'; return; }
   store.set('seller', seller);
-  $('iList').textContent = '';
+  $('iList').textContent = ''; $('iChips').textContent = '';
+  $('seller').value = seller;
   scan = { seller, next: null, latest: null, hours: 0, failed: 0, truncated: false, count: { REAL: 0, FAKE: 0, EURC: 0, OTHER: 0 } };
   scanPages(3);
 });

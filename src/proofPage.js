@@ -1,6 +1,6 @@
 // Server-rendered proof page for /p/<hash>?seller=<addr>. Anyone can open the
 // link and see the verdict, read fresh from the chain. Nothing is stored.
-import { LABEL, FAKE_EXPLAINER } from './labels.js';
+import { LABEL, FAKE_EXPLAINER, TONE, verdictHead, verdictFacts } from './labels.js';
 import { proofUrl, whatsappUrl } from './share.js';
 
 const EXPLORER = 'https://explorer.arc.io';
@@ -17,6 +17,10 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
     : '';
   const link = proofUrl(origin, hash, seller, expected);
   const wa = whatsappUrl(`Assay check: ${label}. ${result.reason} ${link}`);
+  const [word, sub] = verdictHead(result.verdict);
+  const facts = verdictFacts(result, expected)
+    .map(([k, v]) => `<div><span>${esc(k)}</span>${esc(v)}</div>`)
+    .join('');
   const want = expected ? `<tr><td>Amount expected</td><td>${esc(expected)} USDC</td></tr>` : '';
   return `<!doctype html>
 <html lang="en">
@@ -30,9 +34,11 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
 <body>
 <main>
   <p class="brand"><a href="/">Assay</a></p>
-  <section class="card" role="status">
-    <p class="verdict ${esc(result.verdict)}">${esc(label)}</p>
+  <section class="card vcard tone-${TONE[result.verdict] || 'warn'}" role="status">
+    <p class="verdict">${esc(word)}</p>
+    ${sub ? `<p class="sub">${esc(sub)}</p>` : ''}
     <p class="why">${esc(result.reason)}</p>
+    <div class="facts2">${facts}</div>
     ${fake}
   </section>
   <table class="facts">
@@ -41,7 +47,7 @@ export function proofPage({ hash, seller, expected, result, origin = '' }) {
     ${want}
   </table>
   <p class="meta">This page was read from Arc mainnet when you opened it. Nothing is saved. Open it again any time and it checks again.</p>
-  <p><a class="btn wa" href="${esc(wa)}" target="_blank" rel="noopener">Share on WhatsApp</a></p>
+  <p><a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">Send proof to the buyer</a></p>
   <p class="meta"><a href="${EXPLORER}/tx/${esc(hash)}" target="_blank" rel="noopener">Open this transaction on the Arc explorer</a></p>
   <p><a class="btn ghost" href="/?hash=${encodeURIComponent(hash)}&seller=${encodeURIComponent(seller)}">Check another payment</a></p>
   <small>Short form: <code>${esc(short)}</code></small>
@@ -55,6 +61,6 @@ export function proofError(message) {
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Assay</title><link rel="stylesheet" href="/style.css"></head>
 <body><main><p class="brand"><a href="/">Assay</a></p>
-<section class="card"><p class="verdict UNVERIFIED">CANNOT VERIFY</p><p class="why">${esc(message)}</p></section>
+<section class="card vcard tone-warn"><p class="verdict">CANNOT VERIFY</p><p class="why">${esc(message)}</p></section>
 <p><a class="btn" href="/">Check a payment</a></p></main></body></html>`;
 }
