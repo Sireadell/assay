@@ -1,7 +1,7 @@
 // Local server. The live site runs the same logic as Vercel functions in api/.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { handleCheck, handleProof, handleInbox } from './handlers.js';
+import { handleCheck, handleProof, handleInbox, handleRate } from './handlers.js';
 
 const PORT = process.env.PORT || 8787;
 const JSON_TYPE = 'application/json';
@@ -29,6 +29,10 @@ createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   if (url.pathname === '/api/check') {
     const r = await handleCheck(url.searchParams);
+    return send(res, r.code, r.body);
+  }
+  if (url.pathname === '/api/rate') {
+    const r = await handleRate();
     return send(res, r.code, r.body);
   }
   if (url.pathname === '/api/inbox') {

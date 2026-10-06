@@ -4,6 +4,7 @@ import { checkPayment as check } from './check.js';
 import { proofPage, proofError } from './proofPage.js';
 import { extractHash } from './share.js';
 import { scanInbox } from './inbox.js';
+import { fetchRate } from './rate.js';
 
 const HASH = /^0x[0-9a-fA-F]{64}$/;
 const BAD_HASH = 'That is not a transaction hash. It should start with 0x and be 66 characters long.';
@@ -50,5 +51,14 @@ export async function handleInbox(params) {
     return { code: 200, body: await scanInbox(seller, { before }) };
   } catch (e) {
     return { code: 502, body: { error: `Could not read Arc right now (${e.message}). Try again.` } };
+  }
+}
+
+// Today's USDC price for the strip at the top of the page.
+export async function handleRate() {
+  try {
+    return { code: 200, body: await fetchRate() };
+  } catch (e) {
+    return { code: 502, body: { error: 'No price source answered.' } };
   }
 }

@@ -16,6 +16,11 @@
 <div class="wrap">
   <p class="top"><a class="brand" href="#check"><i class="mark"></i>Assay</a><a class="toplink" href="https://github.com/Sireadell/assay#chrome-extension" target="_blank" rel="noopener">Chrome extension</a></p>
 
+  <p class="rate" id="priceBar" hidden>
+    <span id="priceText"></span>
+    <button type="button" id="priceUse" class="ratebtn">Use this rate</button>
+  </p>
+
   <section class="banner" id="req" hidden>
     <p style="margin:0 0 4px">You've been asked to pay</p>
     <b id="reqAmt"></b>
@@ -231,6 +236,28 @@ if (isRequest) {
   });
 }
 route();
+
+// Today's USDC price, shown at the top for reference. It never decides a verdict.
+async function showRate(){
+  if (isRequest) return;
+  try {
+    const d = await (await fetch('/api/rate')).json();
+    if (!d.ngn) return;
+    const naira = '\u20A6' + Math.round(d.ngn).toLocaleString('en-US');
+    const usd = d.usd ? (Math.abs(d.usd - 1) < 0.005 ? '$1.00' : '$' + d.usd.toFixed(3)) : '';
+    const mins = Math.max(0, Math.round((Date.now() - d.updated) / 60000));
+    const age = mins < 1 ? 'just now' : mins < 90 ? mins + ' min ago' : Math.round(mins / 60) + ' hours ago';
+    $('priceText').textContent = '1 USDC = ' + (usd ? usd + ' = ' : '') + naira + ' today. ' + d.source + ', ' + age + '.';
+    $('priceBar').hidden = false;
+    const rounded = String(Math.round(d.ngn));
+    $('priceUse').onclick = () => {
+      for (const id of ['rate', 'mRate']) { $(id).value = rounded; }
+      store.set('rate', rounded); convert(); makerConvert();
+      $('priceUse').textContent = 'Rate filled in';
+    };
+  } catch { /* no price shown rather than a wrong one */ }
+}
+showRate();
 
 // Accept a pasted explorer link and keep only the hash.
 function cleanHash(){
