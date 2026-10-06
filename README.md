@@ -26,6 +26,7 @@ Assay reads the same transaction and says: NOT PAID: FAKE TOKEN.
 | Also | How |
 |---|---|
 | EURC sent instead of USDC | Real EURC (`0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1`) is called out as "PAID IN EURC, NOT USDC", not as a fake. |
+| Inbox scan | Type only your address and Assay lists the payments that reached it in the last day, each marked real USDC, EURC, a lookalike (a token with USDC in its name) or some other token. Arc's servers only search about 80 minutes of blocks at a time, so it reads several stretches side by side and tells you if one could not be read. |
 | Proof link | `/p/<hash>?seller=<address>` shows the verdict to anyone. It re-reads the chain every time it is opened. Nothing is stored on a server. |
 | WhatsApp share | One tap sends the verdict and the proof link. |
 | Payment link for sellers | A seller makes a link with their address, the amount and what it's for. The buyer opens it, pays, pastes the hash and gets a proof link to send back. Everything lives inside the link. |
@@ -97,9 +98,10 @@ node src/cli.js <hash> <seller>
 | File | Purpose |
 |---|---|
 | `src/verdict.js` | The verdict engine. Pure functions, no network. |
+| `src/inbox.js` | The inbox scan: finds the payments to an address and sorts them by kind. |
 | `src/arcRpc.js` | Reads a transaction from Arc mainnet. Asks four Arc mainnet endpoints at once and takes the first real answer. |
 | `src/handlers.js`, `api/` | Request logic, shared by the local server and the Vercel functions. |
-| `src/server.js` | Serves the page, `/api/check` and the proof link. |
+| `src/server.js` | Serves the page, `/api/check`, `/api/inbox` and the proof link. |
 | `src/share.js` | Proof, WhatsApp and payment request links. |
 | `src/naira.js` | Naira to USDC with a rate the user types. |
 | `src/stamp.js` | Builds the stamp transaction for the visitor's wallet. |

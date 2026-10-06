@@ -55,7 +55,7 @@ export function call(method, params, urls = ARC_RPCS, one = callOne) {
     const settle = () => {
       if (--pending > 0) return;
       if (sawNull) resolve(null);
-      else reject(new Error(errors[0]?.message || 'no Arc endpoint answered'));
+      else reject(errors.find((e) => /max results/i.test(e.message)) || errors[0] || new Error('no Arc endpoint answered'));
     };
     for (const url of urls) {
       one(url, method, params).then(

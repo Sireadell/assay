@@ -58,6 +58,18 @@
     <p class="meta" id="stampMsg"></p>
   </section>
 
+  <div id="inbox">
+    <hr>
+    <h2>Not sure which payment? Scan your inbox</h2>
+    <p class="meta" style="margin-top:0">Type only your address. Assay lists the payments that reached it in the last day, and marks each one as real USDC or not. No transaction hash needed.</p>
+    <label for="iAddr">Your Arc address</label>
+    <input id="iAddr" placeholder="0x..." autocomplete="off" spellcheck="false">
+    <button class="ghost" id="iBtn" type="button">Scan my last 24 hours</button>
+    <p class="hint" id="iMsg" role="status" aria-live="polite"></p>
+    <ul class="inbox" id="iList"></ul>
+    <button class="ghost" id="iMore" type="button" hidden>Scan older payments</button>
+  </div>
+
   <div id="maker">
     <hr>
     <h2>Selling something? Send your buyer a payment link</h2>
@@ -102,10 +114,11 @@ $('expected').value = params.get('expected') || '';
 $('naira').value = params.get('naira') || '';
 $('rate').value = store.get('rate');
 $('mSeller').value = store.get('seller');
+$('iAddr').value = params.get('seller') || store.get('seller');
 
 // Payment request mode: a buyer opened a link a seller sent them.
 if (isRequest) {
-  $('req').hidden = false; $('intro').hidden = true; $('maker').hidden = true;
+  $('req').hidden = false; $('intro').hidden = true; $('maker').hidden = true; $('inbox').hidden = true;
   const amt = params.get('expected');
   $('reqAmt').textContent = amt ? amt + ' USDC' : 'in USDC';
   $('reqNote').textContent = params.get('note') ? 'For: ' + params.get('note') : '';
@@ -211,6 +224,83 @@ $('f').addEventListener('submit', async e => {
   }
   $('b').disabled = false; $('b').textContent = 'Check this payment';
 });
+
+// Inbox scan: the payments that reached an address, newest first, 8 hours per
+// request. The first press reads three requests (about a day), then it offers more.
+let scan = null;
+function ago(blocks){
+  const s = blocks * 0.5;
+  if (s < 3600) return 'about ' + Math.max(1, Math.round(s / 60)) + ' minutes ago';
+  if (s < 172800) return 'about ' + Math.round(s / 3600) + ' hours ago';
+  return 'about ' + Math.round(s / 86400) + ' days ago';
+}
+function addRow(it, latest){
+  const li = document.createElement('li');
+  const b = document.createElement('b');
+  b.className = it.kind;
+  b.textContent = it.label + (it.amount ? ': ' + it.amount : '');
+  const when = document.createElement('span');
+  when.textContent = ago(latest - it.block);
+  li.append(b, when);
+  if (it.token) {
+    const t = document.createElement('span');
+    t.append('Token contract ', Object.assign(document.createElement('code'), { textContent: it.token }));
+    if (it.tokenName) t.append(' calls itself "' + it.tokenName.slice(0, 30) + '"');
+    li.append(t);
+  }
+  const a = document.createElement('a');
+  a.href = '/p/' + it.hash + '?seller=' + encodeURIComponent(scan.seller);
+  a.textContent = 'Open proof page';
+  li.append(a);
+  $('iList').append(li);
+}
+const total = () => Object.values(scan.count).reduce((a, n) => a + n, 0);
+function summary(){
+  const c = scan.count, t = total();
+  if (!t) return `Last ${scan.hours} hours: no payments reached this address.`;
+  const parts = [c.REAL + ' real USDC'];
+  if (c.FAKE) parts.push(c.FAKE + (c.FAKE > 1 ? ' lookalikes' : ' lookalike'));
+  if (c.EURC) parts.push(c.EURC + ' EURC');
+  if (c.OTHER) parts.push(c.OTHER + ' other token' + (c.OTHER > 1 ? 's' : ''));
+  return `Last ${scan.hours} hours: ${t} payment${t > 1 ? 's' : ''} (${parts.join(', ')}).`;
+}
+async function scanPages(n){
+  $('iBtn').disabled = true; $('iMore').hidden = true;
+  for (let i = 0; i < n; i++) {
+    $('iMsg').textContent = 'Reading Arc... ' + total() + ' payments found so far.';
+    let d;
+    try {
+      const q = new URLSearchParams({ seller: scan.seller });
+      if (scan.next !== null) q.set('before', scan.next);
+      const res = await fetch('/api/inbox?' + q);
+      d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'failed');
+    } catch (err) {
+      $('iMsg').textContent = (err && err.message ? err.message : 'Could not read Arc.') + ' Press the button to try again.';
+      $('iBtn').disabled = false; return;
+    }
+    if (scan.latest === null) scan.latest = d.toBlock;
+    for (const it of d.items) { scan.count[it.kind]++; addRow(it, scan.latest); }
+    scan.hours += d.hoursScanned;
+    scan.failed += d.failedWindows;
+    if (d.truncated) scan.truncated = true;
+    scan.next = d.next;
+    if (scan.next === null) break;
+  }
+  scan.hours = Math.round(scan.hours * 10) / 10;
+  $('iMsg').textContent = summary() + (scan.truncated ? ' This address gets a lot of payments, so only the newest of each stretch are shown.' : '') + (scan.failed ? ' Some stretches could not be read, so scan again to be sure.' : '');
+  $('iBtn').disabled = false;
+  $('iMore').hidden = scan.next === null;
+}
+$('iBtn').addEventListener('click', () => {
+  const seller = $('iAddr').value.trim();
+  if (!ADDR.test(seller)) { $('iMsg').textContent = 'Type your Arc address first. It starts with 0x and is 42 characters long.'; return; }
+  store.set('seller', seller);
+  $('iList').textContent = '';
+  scan = { seller, next: null, latest: null, hours: 0, failed: 0, truncated: false, count: { REAL: 0, FAKE: 0, EURC: 0, OTHER: 0 } };
+  scanPages(3);
+});
+$('iMore').addEventListener('click', () => scanPages(3));
 
 // Seller side: make a payment link for a buyer.
 function makerConvert(){
