@@ -1,18 +1,36 @@
 # Assay
 
-Did you really get paid in USDC on Arc, or in a fake token with the same name?
+Assay is a payment checker for people who get paid in USDC on Arc.
 
-An assay is the test that tells real gold from fake. Assay does the same for USDC payments on Arc.
+I built it because people who are new to digital dollars can't yet tell real USDC from a fake token with the same name, and Arc's explorer can show both under the same words.
 
 **Live: https://assay-arc.vercel.app**
 
-Paste a transaction hash and your Arc address. Assay gives one answer: **PAID**, **PARTLY PAID**, **NOT PAID**, or **NOT PAID: FAKE TOKEN**.
+## The question
 
-## Why this exists
+Did you really get paid in USDC?
 
-Arc's block explorer shows a lookalike token transfer as "Transfer 20 USDC". Look at transaction `0x4a36399e8e34ebdcba92cee84ff0a1dc574ee03086d99ca14197ba2adcbfab85`. The seller `0xad3cd9a7995c2895ce41f9c0220deb344173ba4b` received 20 of a token that only copies the name. It is not real USDC. Someone new to digital currency would call that payment complete and hand over the goods.
+On Arc's explorer, a fake token can show up as "Transfer 20 USDC", the same words as a real payment. A real USDC transfer has a small "Circle" label above the headline. The fake has none.
 
-Assay reads the same transaction and says: NOT PAID: FAKE TOKEN.
+Look at transaction `0x4a36399e8e34ebdcba92cee84ff0a1dc574ee03086d99ca14197ba2adcbfab85`. The seller `0xad3cd9a7995c2895ce41f9c0220deb344173ba4b` received 20 of a token that only copies the name. It is not real USDC. Someone new to digital money would call that payment complete and hand over the goods.
+
+Assay reads the same transaction and says **NOT PAID: FAKE TOKEN**.
+
+An assay is the test that tells real gold from fake. This does the same for USDC payments.
+
+## What you can do
+
+The app has three places, with a menu at the bottom.
+
+| Place | What it does |
+|---|---|
+| Check | Type your address and see which payments to it in the last day were real USDC. Or paste one transaction link and get one answer: PAID, PARTLY PAID, NOT PAID or NOT PAID: FAKE TOKEN. |
+| Get paid | Make a payment link with the amount and what it is for. Your buyer opens it, pays, and sends you a proof link. |
+| Learn | How a fake looks on the explorer, where real USDC lives, the Chrome extension, and what the stamp is. |
+
+## What it does not do
+
+Assay does not tell you whether the goods arrived. It does not decide who is honest. A "lookalike" means a token has USDC in its name and is not the real coin. It does not mean the sender meant to cheat you.
 
 ## What it checks
 
@@ -27,6 +45,7 @@ Assay reads the same transaction and says: NOT PAID: FAKE TOKEN.
 |---|---|
 | EURC sent instead of USDC | Real EURC (`0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1`) is called out as "PAID IN EURC, NOT USDC", not as a fake. |
 | Inbox scan | Type only your address and Assay lists the payments that reached it in the last day, each marked real USDC, EURC, a lookalike (a token with USDC in its name) or some other token. Arc's servers only search about 80 minutes of blocks at a time, so it reads several stretches side by side and tells you if one could not be read. |
+| Today's price | A strip at the top shows what 1 USDC is worth in dollars and naira today, with the source. It is for reference only and never decides a verdict. |
 | Proof link | `/p/<hash>?seller=<address>` shows the verdict to anyone. It re-reads the chain every time it is opened. Nothing is stored on a server. |
 | WhatsApp share | One tap sends the verdict and the proof link. |
 | Payment link for sellers | A seller makes a link with their address, the amount and what it's for. The buyer opens it, pays, pastes the hash and gets a proof link to send back. Everything lives inside the link. |
